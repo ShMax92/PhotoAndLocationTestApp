@@ -25,7 +25,6 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
         }
         locationManager.delegate = self as? CLLocationManagerDelegate
         locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
-        locationManager.startUpdatingLocation()
     }
     
     @IBAction func cameraButton(_ sender: Any) {
@@ -44,6 +43,7 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let photo = info[UIImagePickerControllerOriginalImage] as? UIImage {
+            locationManager.startUpdatingLocation()
             let photoData = UIImagePNGRepresentation(photo)!
             let date = Date()
             let latitude = locationManager.location!.coordinate.latitude
@@ -54,6 +54,7 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
             photos.append(myPhoto)
             
             picker.dismiss(animated: true) {
+                self.locationManager.stopUpdatingLocation()
                 self.collectionView?.reloadData()
                 self.storeData()
             }
