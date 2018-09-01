@@ -42,9 +42,10 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        if let photo = info[UIImagePickerControllerOriginalImage] as? UIImage {
+        if let newPhoto = info[UIImagePickerControllerOriginalImage] as? UIImage {
+            let photo = newPhoto.fixedOrientation()
             locationManager.startUpdatingLocation()
-            let photoData = UIImagePNGRepresentation(photo)!
+            let photoData = UIImagePNGRepresentation(photo!)!
             let date = Date()
             let latitude = locationManager.location!.coordinate.latitude
             let longitude = locationManager.location!.coordinate.longitude
