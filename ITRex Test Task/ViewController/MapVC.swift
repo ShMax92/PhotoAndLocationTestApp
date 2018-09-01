@@ -23,8 +23,11 @@ class MapVC: UIViewController {
             let latitude = myPhoto.location.latitude
             let longitude = myPhoto.location.longitude
             let location = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = location
             let coordinateRegion = MKCoordinateRegionMakeWithDistance(location, radius, radius)
             mapView.setRegion(coordinateRegion, animated: true)
+            mapView.addAnnotation(annotation)
         }
         
         
