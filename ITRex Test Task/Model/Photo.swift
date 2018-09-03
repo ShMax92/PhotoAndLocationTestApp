@@ -1,5 +1,5 @@
 //
-//  MyPhoto.swift
+//  Photo.swift
 //  ITRex Test Task
 //
 //  Created by Maxim Shirko on 30.08.2018.
@@ -9,16 +9,16 @@
 import UIKit
 import CoreLocation
 
-struct MyPhoto: Codable {
+struct Photo: Codable {
 
-    let photo: Data
-    let date: Date
-    let location: Location
+    let photoData: Data?
+    let photoDate: Date
+    let photoLocation: Location?
     
-    init(photo: Data, date: Date, location: Location) {
-        self.photo = photo
-        self.date = date
-        self.location = location
+    init(photoData: Data, photoDate: Date, photoLocation: Location) {
+        self.photoData = photoData
+        self.photoDate = photoDate
+        self.photoLocation = photoLocation
     }
 }
 

@@ -10,7 +10,7 @@ import UIKit
 
 class PhotoStorage: NSObject {
     
-    static func storePhotos(photos: [MyPhoto]) {
+    static func storePhotos(photos: [Photo]) {
         let documents = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileName = "photos.data"
         let fileURL = documents.appendingPathComponent(fileName)
@@ -22,16 +22,16 @@ class PhotoStorage: NSObject {
         }
     }
     
-    static func loadPhotos() -> [MyPhoto]? {
+    static func loadPhotos() -> [Photo]? {
         let documents = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileName = "photos.data"
         let fileURL = documents.appendingPathComponent(fileName)
         do {
             let data = try Data(contentsOf: fileURL)
-            return try PropertyListDecoder().decode([MyPhoto].self, from: data)
+            return try PropertyListDecoder().decode([Photo].self, from: data)
         } catch {
             print(error)
-            return [MyPhoto]()
+            return [Photo]()
         }
     }
     

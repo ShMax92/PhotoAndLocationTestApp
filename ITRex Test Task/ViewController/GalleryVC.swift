@@ -8,13 +8,14 @@
 
 import UIKit
 import CoreLocation
+import AVKit
 
 private let reuseIdentifier = "imageCell"
 
 class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
     let locationManager = CLLocationManager()
-    var photos = [MyPhoto]()
+    var photos = [Photo]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,7 +29,22 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
     }
     
     @IBAction func cameraButton(_ sender: Any) {
-        takePhoto()
+        let locationStatus = CLLocationManager.authorizationStatus() == .authorizedWhenInUse
+        let cameraStatus = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
+        
+        if locationStatus && cameraStatus {
+            takePhoto()
+        } else {
+            let noAccessAlert = UIAlertController()
+            let getAccessAction = UIAlertAction(title: "Access needed", style: .default) {(_) in
+                if let url = NSURL(string:UIApplicationOpenSettingsURLString) {
+                    UIApplication.shared.open(url as URL) { (_) in
+                    }
+                }
+            }
+            noAccessAlert.addAction(getAccessAction)
+            self.present(noAccessAlert, animated: true, completion: nil)
+        }
     }
     
     private func takePhoto() {
@@ -43,21 +59,24 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let newPhoto = info[UIImagePickerControllerOriginalImage] as? UIImage {
-            let photo = newPhoto.fixedOrientation()
             locationManager.startUpdatingLocation()
-            let photoData = UIImagePNGRepresentation(photo!)!
-            let date = Date()
-            let latitude = locationManager.location!.coordinate.latitude
-            let longitude = locationManager.location!.coordinate.longitude
-            let location = Location(latitude: latitude, longitude: longitude)
-            
-            let myPhoto = MyPhoto(photo: photoData, date: date, location: location)
-            photos.append(myPhoto)
-            
-            picker.dismiss(animated: true) {
-                self.locationManager.stopUpdatingLocation()
-                self.collectionView?.reloadData()
-                self.storeData()
+            if let photoImage = newPhoto.fixedOrientation() {
+                if let photoData = UIImagePNGRepresentation(photoImage) {
+                    let photoDate = Date()
+                    if let location = locationManager.location {
+                        let latitude = location.coordinate.latitude
+                        let longitude = location.coordinate.longitude
+                        let photoLocation = Location(latitude: latitude, longitude: longitude)
+                        let photo = Photo(photoData: photoData, photoDate: photoDate, photoLocation: photoLocation)
+                        photos.append(photo)
+                        
+                        picker.dismiss(animated: true) {
+                            self.locationManager.stopUpdatingLocation()
+                            self.storeData()
+                            self.collectionView?.reloadData()
+                        }
+                    }
+                }
             }
         }
     }
@@ -71,7 +90,6 @@ class GalleryVC: UICollectionViewController, UIImagePickerControllerDelegate, UI
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let _: CLLocationCoordinate2D = manager.location?.coordinate else { return }
     }
-
 }
 
 extension GalleryVC: UICollectionViewDelegateFlowLayout {
@@ -83,8 +101,10 @@ extension GalleryVC: UICollectionViewDelegateFlowLayout {
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? GalleryCell {
-            let photo = UIImage(data: photos[indexPath.row].photo)
-            cell.photoPreview.image = photo
+            if let photoData = photos[indexPath.row].photoData {
+                let photoImage = UIImage(data: photoData)
+                cell.photoPreview.image = photoImage
+            }
             return cell
         } else {
             return UICollectionViewCell()
@@ -96,23 +116,23 @@ extension GalleryVC: UICollectionViewDelegateFlowLayout {
         let Storyboard = UIStoryboard(name: "Main", bundle: nil)
         let alert = UIAlertController(title: "Actions:", message: nil, preferredStyle: .actionSheet)
         //details
-        let detailsAction = UIAlertAction(title: "Details", style: .default) { (_) in
+        let detailsAction = UIAlertAction(title: "Details", style: .default) { [weak self] (_) in
             if let detailsVC = Storyboard.instantiateViewController(withIdentifier: "DetailsVC") as? DetailsVC {
-                detailsVC.myPhoto = self.photos[indexPath.row]
-                self.navigationController?.pushViewController(detailsVC, animated: true)
+                detailsVC.photo = self?.photos[indexPath.row]
+                self?.navigationController?.pushViewController(detailsVC, animated: true)
             }
         }
         
-        let mapAction = UIAlertAction(title: "Map", style: .default) { (_) in
+        let mapAction = UIAlertAction(title: "Map", style: .default) { [weak self] (_) in
             if let mapVC = Storyboard.instantiateViewController(withIdentifier: "MapVC") as? MapVC {
-                mapVC.myPhoto = self.photos[indexPath.row]
-                self.navigationController?.pushViewController(mapVC, animated: true)
+                mapVC.photo = self?.photos[indexPath.row]
+                self?.navigationController?.pushViewController(mapVC, animated: true)
             }
         }
-        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { (_) in
-            self.photos.remove(at: indexPath.row)
-            self.storeData()
-            self.collectionView?.reloadData()
+        let deleteAction = UIAlertAction(title: "Delete", style: .destructive) { [weak self] (_) in
+            self?.photos.remove(at: indexPath.row)
+            self?.storeData()
+            self?.collectionView?.reloadData()
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         

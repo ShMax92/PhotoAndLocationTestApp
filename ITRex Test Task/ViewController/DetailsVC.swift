@@ -11,7 +11,7 @@ import UIKit
 class DetailsVC: UIViewController {
     
     @IBOutlet weak var imageView: UIImageView!
-    var myPhoto: MyPhoto? = nil
+    var photo: Photo? = nil
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,11 +19,10 @@ class DetailsVC: UIViewController {
         imageView.backgroundColor = UIColor.black
         imageView.contentMode = .scaleAspectFit
         
-        if let myPhoto = myPhoto {
-            let photo = UIImage(data: myPhoto.photo)
-            self.imageView.image = photo
+        if let photo = photo {
+            if let photoData = photo.photoData {
+                self.imageView.image = UIImage(data: photoData)
+            }
         }
     }
-    
-    
 }
